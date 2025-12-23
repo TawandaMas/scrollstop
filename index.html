@@ -8,8 +8,7 @@
     <title>StressBall PWA</title>
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" type="image/png" href="icons/icon-72x72.png">
-    <link rel="apple-touch-icon" href="icons/icon-152x152.png">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
 </head>
 <body>
     <div class="app-container">
@@ -93,7 +92,7 @@
                 </div>
                 <div class="labyrinth-container">
                     <div class="labyrinth" id="labyrinth">
-                        <!-- Labyrinth will be drawn here -->
+                        <!-- Labyrinth walls will be generated here -->
                     </div>
                     <div class="labyrinth-ball" id="labyrinthBall"></div>
                     <div class="labyrinth-center" id="labyrinthCenter"></div>
@@ -111,20 +110,13 @@
             </div>
         </main>
 
-        <!-- PWA Install Prompt -->
-        <div id="installPrompt" class="install-prompt">
-            <p>Install StressBall for quick access!</p>
-            <button id="installBtn" class="install-btn">📲 Install</button>
-            <button id="dismissInstall" class="dismiss-btn">✕</button>
-        </div>
-
         <!-- Footer -->
         <footer class="app-footer">
             <p>PWA Stress Relief • Works Offline • No Tracking</p>
         </footer>
     </div>
 
-    <!-- Scripts -->
+    <!-- JavaScript Files -->
     <script src="app.js" type="module"></script>
 </body>
 </html>

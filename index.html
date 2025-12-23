@@ -2,1310 +2,175 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#4a6fa5">
-    <title>StressBall PWA - Digital Stress Relief</title>
-    <style>
-        /* ======== CSS STARTS HERE ======== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary-color: #5d6df5;
-            --secondary-color: #8b93ff;
-            --accent-color: #ff8a8a;
-            --background-color: #f5f7ff;
-            --surface-color: #ffffff;
-            --text-color: #2d3748;
-            --text-light: #718096;
-            --border-color: #e2e8f0;
-            --success-color: #48bb78;
-            --danger-color: #f56565;
-            --shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-            --border-radius: 20px;
-            --transition: all 0.3s ease;
-        }
-
-        [data-theme="dark"] {
-            --primary-color: #7c8aff;
-            --secondary-color: #9da5ff;
-            --accent-color: #ff6b6b;
-            --background-color: #1a202c;
-            --surface-color: #2d3748;
-            --text-color: #e2e8f0;
-            --text-light: #a0aec0;
-            --border-color: #4a5568;
-            --shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, var(--background-color) 0%, #e6ebff 100%);
-            color: var(--text-color);
-            line-height: 1.6;
-            min-height: 100vh;
-            padding: 0;
-            margin: 0;
-            transition: var(--transition);
-            overflow-x: hidden;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        [data-theme="dark"] body {
-            background: linear-gradient(135deg, var(--background-color) 0%, #2d3748 100%);
-        }
-
-        .app-container {
-            max-width: 100vw;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            padding: 0;
-        }
-
-        /* HEADER */
-        .app-header {
-            background-color: var(--surface-color);
-            padding: 1rem 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: var(--shadow);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            backdrop-filter: blur(10px);
-            background-color: rgba(255, 255, 255, 0.9);
-        }
-
-        [data-theme="dark"] .app-header {
-            background-color: rgba(45, 55, 72, 0.9);
-        }
-
-        .logo {
-            font-size: 1.8rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .logo::before {
-            content: '🎮';
-            font-size: 2rem;
-        }
-
-        .controls {
-            display: flex;
-            gap: 10px;
-        }
-
-        .control-btn {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            border: 2px solid var(--border-color);
-            background: var(--surface-color);
-            color: var(--text-color);
-            font-size: 1.2rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
-        }
-
-        .control-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow);
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-
-        /* NAVIGATION */
-        .exercise-nav {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            padding: 1rem;
-            background: var(--surface-color);
-            border-bottom: 1px solid var(--border-color);
-            position: sticky;
-            top: 76px;
-            z-index: 999;
-        }
-
-        .nav-btn {
-            flex: 1;
-            max-width: 120px;
-            padding: 0.8rem;
-            border: none;
-            border-radius: var(--border-radius);
-            background: transparent;
-            color: var(--text-light);
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.5rem;
-            transition: var(--transition);
-        }
-
-        .nav-btn.active {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(93, 109, 245, 0.3);
-        }
-
-        .nav-btn:not(.active):hover {
-            background: var(--border-color);
-        }
-
-        .nav-icon {
-            font-size: 1.8rem;
-        }
-
-        .nav-label {
-            font-size: 0.85rem;
-        }
-
-        /* MAIN CONTENT */
-        .exercise-container {
-            flex: 1;
-            padding: 2rem 1.5rem;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .exercise {
-            display: none;
-            flex-direction: column;
-            height: 100%;
-            animation: fadeIn 0.5s ease;
-        }
-
-        .exercise.active {
-            display: flex;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .exercise-header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .exercise-header h2 {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-            color: var(--primary-color);
-        }
-
-        .exercise-header p {
-            color: var(--text-light);
-            font-size: 1.1rem;
-        }
-
-        /* BUBBLE WRAP */
-        .bubble-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-            gap: 15px;
-            padding: 1.5rem;
-            margin: 0 auto;
-            max-width: 500px;
-            flex: 1;
-        }
-
-        .bubble {
-            aspect-ratio: 1;
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #7dd3fc, #0ea5e9);
-            border: 4px solid #38bdf8;
-            cursor: pointer;
-            position: relative;
-            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: inset 0 -8px 16px rgba(0, 0, 0, 0.1),
-                        0 4px 12px rgba(14, 165, 233, 0.2);
-            animation: bubbleFloat 3s ease-in-out infinite;
-            animation-delay: calc(var(--i) * 0.1s);
-        }
-
-        @keyframes bubbleFloat {
-            0%, 100% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-10px) scale(1.05); }
-        }
-
-        .bubble::before {
-            content: '';
-            position: absolute;
-            top: 20%;
-            left: 20%;
-            width: 20%;
-            height: 20%;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.8);
-        }
-
-        .bubble.popped {
-            background: radial-gradient(circle at 30% 30%, #fca5a5, #ef4444);
-            border-color: #f87171;
-            transform: scale(0.1);
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .bubble:active:not(.popped) {
-            transform: scale(0.9);
-        }
-
-        .stats {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.5rem;
-            background: var(--surface-color);
-            border-radius: var(--border-radius);
-            margin-top: auto;
-            box-shadow: var(--shadow);
-        }
-
-        .stat {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .stat-value {
-            font-size: 2.5rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            line-height: 1;
-        }
-
-        .stat-label {
-            color: var(--text-light);
-            font-size: 0.9rem;
-            margin-top: 0.25rem;
-        }
-
-        .action-btn {
-            padding: 0.9rem 2rem;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            border: none;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            box-shadow: 0 4px 15px rgba(93, 109, 245, 0.3);
-        }
-
-        .action-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(93, 109, 245, 0.4);
-        }
-
-        .action-btn:active {
-            transform: translateY(-1px);
-        }
-
-        /* KALEIDOSCOPE */
-        .kaleidoscope-controls {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
-        }
-
-        .canvas-container {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 2rem;
-            touch-action: none;
-        }
-
-        #kaleidoscopeCanvas {
-            width: 100%;
-            max-width: 500px;
-            max-height: 500px;
-            aspect-ratio: 1;
-            border-radius: var(--border-radius);
-            background: var(--surface-color);
-            box-shadow: var(--shadow);
-            touch-action: none;
-            cursor: crosshair;
-        }
-
-        .color-indicator {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 1rem;
-            padding: 1.5rem;
-            background: var(--surface-color);
-            border-radius: var(--border-radius);
-            margin-top: auto;
-            font-weight: 600;
-        }
-
-        .color-dot {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 3px solid var(--border-color);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        /* LABYRINTH */
-        .labyrinth-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .control-mode {
-            display: flex;
-            background: var(--surface-color);
-            border-radius: 50px;
-            padding: 0.25rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .control-mode-btn {
-            padding: 0.6rem 1.5rem;
-            border: none;
-            border-radius: 50px;
-            background: transparent;
-            color: var(--text-color);
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .control-mode-btn.active {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            box-shadow: 0 4px 12px rgba(93, 109, 245, 0.3);
-        }
-
-        .labyrinth-container {
-            position: relative;
-            width: 100%;
-            max-width: 500px;
-            aspect-ratio: 1;
-            margin: 0 auto 2rem;
-            background: var(--surface-color);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            overflow: hidden;
-            touch-action: none;
-        }
-
-        .labyrinth {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            background: linear-gradient(135deg, rgba(93, 109, 245, 0.05), rgba(139, 147, 255, 0.05));
-        }
-
-        .labyrinth-wall {
-            position: absolute;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(93, 109, 245, 0.3);
-        }
-
-        .labyrinth-ball {
-            position: absolute;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, var(--accent-color), #ff6b6b);
-            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
-            z-index: 10;
-            transition: transform 0.1s linear;
-            top: 30px;
-            left: 30px;
-        }
-
-        .labyrinth-center {
-            position: absolute;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, var(--success-color), #38a169);
-            box-shadow: 0 0 0 8px rgba(72, 187, 120, 0.3),
-                        inset 0 0 20px rgba(255, 255, 255, 0.5);
-            bottom: 60px;
-            right: 60px;
-            z-index: 5;
-            animation: centerGlow 2s infinite alternate;
-        }
-
-        @keyframes centerGlow {
-            0% { box-shadow: 0 0 0 8px rgba(72, 187, 120, 0.3); }
-            100% { box-shadow: 0 0 0 15px rgba(72, 187, 120, 0.1); }
-        }
-
-        .labyrinth-stats {
-            display: flex;
-            justify-content: space-around;
-            margin-top: auto;
-            padding: 1.5rem;
-            background: var(--surface-color);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-        }
-
-        /* FOOTER */
-        .app-footer {
-            text-align: center;
-            padding: 1.5rem;
-            color: var(--text-light);
-            font-size: 0.9rem;
-            border-top: 1px solid var(--border-color);
-            background: var(--surface-color);
-        }
-
-        /* RESPONSIVE */
-        @media (max-width: 768px) {
-            .bubble-container {
-                grid-template-columns: repeat(4, 1fr);
-                gap: 12px;
-            }
-            
-            .exercise-header h2 {
-                font-size: 1.6rem;
-            }
-            
-            .stat-value {
-                font-size: 2rem;
-            }
-            
-            .action-btn {
-                padding: 0.8rem 1.5rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .bubble-container {
-                grid-template-columns: repeat(3, 1fr);
-                gap: 10px;
-            }
-            
-            .nav-label {
-                font-size: 0.75rem;
-            }
-            
-            .kaleidoscope-controls {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            .action-btn {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-        /* ======== CSS ENDS HERE ======== */
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#5d6df5">
+    <title>StressBall PWA | Digital Stress Relief</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
+    <meta name="description" content="A progressive web app for stress relief with bubble wrap, kaleidoscope drawing, and focus labyrinth exercises.">
 </head>
 <body>
-    <div class="app-container">
-        <!-- HEADER -->
-        <header class="app-header">
-            <h1 class="logo">StressBall</h1>
-            <div class="controls">
-                <button id="soundToggle" class="control-btn" title="Toggle sound">🔊</button>
-                <button id="hapticToggle" class="control-btn" title="Toggle haptic feedback">📳</button>
-                <button id="themeToggle" class="control-btn" title="Toggle theme">🌙</button>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-emoji">🎮</span>
+                <h1>StressBall</h1>
+            </div>
+            <div class="settings">
+                <button id="themeToggle" class="icon-btn" aria-label="Toggle theme">
+                    <span class="icon">🌙</span>
+                </button>
+                <button id="soundToggle" class="icon-btn" aria-label="Toggle sound">
+                    <span class="icon">🔊</span>
+                </button>
+                <button id="hapticToggle" class="icon-btn" aria-label="Toggle haptic feedback">
+                    <span class="icon">📳</span>
+                </button>
             </div>
         </header>
 
-        <!-- NAVIGATION -->
-        <nav class="exercise-nav">
-            <button class="nav-btn active" data-exercise="bubble-wrap">
-                <span class="nav-icon">🫧</span>
-                <span class="nav-label">Bubble Wrap</span>
+        <!-- Navigation -->
+        <nav class="tabs">
+            <button class="tab active" data-target="bubble-wrap">
+                <span class="tab-icon">🫧</span>
+                <span class="tab-label">Bubble Wrap</span>
             </button>
-            <button class="nav-btn" data-exercise="kaleidoscope">
-                <span class="nav-icon">🌀</span>
-                <span class="nav-label">Kaleidoscope</span>
+            <button class="tab" data-target="kaleidoscope">
+                <span class="tab-icon">🌀</span>
+                <span class="tab-label">Kaleidoscope</span>
             </button>
-            <button class="nav-btn" data-exercise="labyrinth">
-                <span class="nav-icon">🧭</span>
-                <span class="nav-label">Focus Labyrinth</span>
+            <button class="tab" data-target="labyrinth">
+                <span class="tab-icon">🧭</span>
+                <span class="tab-label">Labyrinth</span>
             </button>
         </nav>
 
-        <!-- MAIN CONTENT -->
-        <main class="exercise-container">
-            <!-- BUBBLE WRAP -->
-            <div id="bubble-wrap-exercise" class="exercise active">
-                <div class="exercise-header">
+        <!-- Main Content -->
+        <main class="content">
+            <!-- Bubble Wrap Section -->
+            <section id="bubble-wrap" class="section active">
+                <div class="section-header">
                     <h2>Infinite Bubble Wrap</h2>
-                    <p>Tap to pop! Each bubble gives satisfying haptic feedback</p>
+                    <p class="subtitle">Tap to pop! Each bubble gives satisfying haptic feedback.</p>
                 </div>
-                <div class="bubble-container" id="bubbleContainer"></div>
+                
+                <div class="bubble-grid" id="bubbleGrid">
+                    <!-- Bubbles will be generated here -->
+                </div>
+                
                 <div class="stats">
-                    <div class="stat">
-                        <span class="stat-value" id="poppedCount">0</span>
-                        <span class="stat-label">Popped</span>
+                    <div class="stat-card">
+                        <div class="stat-value" id="popCount">0</div>
+                        <div class="stat-label">Popped</div>
                     </div>
-                    <button id="resetBubbles" class="action-btn">
-                        <span>🔁</span> Reset Bubbles
+                    <button id="resetBubbles" class="primary-btn">
+                        <span class="btn-icon">🔄</span>
+                        Reset Bubbles
                     </button>
                 </div>
-            </div>
+            </section>
 
-            <!-- KALEIDOSCOPE -->
-            <div id="kaleidoscope-exercise" class="exercise">
-                <div class="exercise-header">
+            <!-- Kaleidoscope Section -->
+            <section id="kaleidoscope" class="section">
+                <div class="section-header">
                     <h2>Kaleidoscope Drawing</h2>
-                    <p>Draw with one finger to create beautiful symmetric patterns</p>
+                    <p class="subtitle">Draw to create beautiful symmetric patterns with different colors.</p>
                 </div>
-                <div class="kaleidoscope-controls">
-                    <button id="clearCanvas" class="action-btn">
-                        <span>🗑️</span> Clear Canvas
+                
+                <div class="controls">
+                    <button id="clearCanvas" class="secondary-btn">
+                        <span class="btn-icon">🗑️</span>
+                        Clear
                     </button>
-                    <button id="changeColor" class="action-btn">
-                        <span>🎨</span> New Color
+                    <button id="changeColor" class="secondary-btn">
+                        <span class="btn-icon">🎨</span>
+                        New Color
                     </button>
-                    <button id="changeSegments" class="action-btn">
-                        <span>🔢</span> Segments: <span id="segmentCount">6</span>
-                    </button>
+                    <div class="segments-control">
+                        <span class="btn-icon">🔢</span>
+                        Segments:
+                        <button id="decreaseSegments" class="segment-btn">-</button>
+                        <span id="segmentCount" class="segment-count">6</span>
+                        <button id="increaseSegments" class="segment-btn">+</button>
+                    </div>
                 </div>
+                
                 <div class="canvas-container">
                     <canvas id="kaleidoscopeCanvas"></canvas>
                 </div>
-                <div class="color-indicator">
-                    Current Color: <span id="currentColor" class="color-dot"></span>
+                
+                <div class="color-info">
+                    Current Color:
+                    <span id="currentColor" class="color-display"></span>
                 </div>
-            </div>
+            </section>
 
-            <!-- LABYRINTH -->
-            <div id="labyrinth-exercise" class="exercise">
-                <div class="exercise-header">
+            <!-- Labyrinth Section -->
+            <section id="labyrinth" class="section">
+                <div class="section-header">
                     <h2>Focus Labyrinth</h2>
-                    <p>Tilt your device or use touch to guide the ball to the center</p>
+                    <p class="subtitle">Tilt your device or use touch to guide the ball to the center.</p>
                 </div>
-                <div class="labyrinth-controls">
-                    <button id="resetLabyrinth" class="action-btn">
-                        <span>🔄</span> Reset Ball
+                
+                <div class="controls">
+                    <button id="resetLabyrinth" class="secondary-btn">
+                        <span class="btn-icon">🔄</span>
+                        Reset Ball
                     </button>
-                    <div class="control-mode">
-                        <button id="tiltControl" class="control-mode-btn active">
-                            📱 Tilt Mode
+                    <div class="mode-toggle">
+                        <button id="tiltMode" class="mode-btn active">
+                            <span class="btn-icon">📱</span>
+                            Tilt
                         </button>
-                        <button id="touchControl" class="control-mode-btn">
-                            👆 Touch Mode
+                        <button id="touchMode" class="mode-btn">
+                            <span class="btn-icon">👆</span>
+                            Touch
                         </button>
                     </div>
                 </div>
+                
                 <div class="labyrinth-container">
-                    <div class="labyrinth" id="labyrinth"></div>
-                    <div class="labyrinth-ball" id="labyrinthBall"></div>
-                    <div class="labyrinth-center" id="labyrinthCenter"></div>
-                </div>
-                <div class="labyrinth-stats">
-                    <div class="stat">
-                        <span class="stat-value" id="timeSpent">0s</span>
-                        <span class="stat-label">Time Spent</span>
+                    <div class="labyrinth" id="labyrinth">
+                        <!-- Labyrinth walls will be generated here -->
                     </div>
-                    <div class="stat">
-                        <span class="stat-value" id="successCount">0</span>
-                        <span class="stat-label">Completed</span>
+                    <div class="ball" id="ball"></div>
+                    <div class="goal" id="goal"></div>
+                </div>
+                
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="timeSpent">0s</div>
+                        <div class="stat-label">Time</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="successCount">0</div>
+                        <div class="stat-label">Completed</div>
                     </div>
                 </div>
-            </div>
+            </section>
         </main>
 
-        <!-- FOOTER -->
-        <footer class="app-footer">
-            <p>PWA Stress Relief • Works Offline • No Tracking • Pure Relaxation</p>
+        <!-- Footer -->
+        <footer class="footer">
+            <p>StressBall PWA • Works Offline • No Tracking • Pure Relaxation</p>
+            <p class="hint">Add to Home Screen for quick access!</p>
         </footer>
+
+        <!-- Install Prompt -->
+        <div id="installPrompt" class="install-prompt hidden">
+            <div class="prompt-content">
+                <p>✨ Install StressBall for quick access!</p>
+                <div class="prompt-buttons">
+                    <button id="installBtn" class="install-btn">📲 Install</button>
+                    <button id="dismissPrompt" class="dismiss-btn">Not Now</button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <script>
-        // ======== JAVASCRIPT STARTS HERE ========
-        class StressBallApp {
-            constructor() {
-                this.currentExercise = 'bubble-wrap';
-                this.soundEnabled = false;
-                this.hapticEnabled = true;
-                this.theme = 'light';
-                
-                this.init();
-            }
-            
-            init() {
-                this.cacheElements();
-                this.bindEvents();
-                this.initExercises();
-                this.applySettings();
-                
-                // Initialize first exercise
-                this.initBubbleWrap();
-            }
-            
-            cacheElements() {
-                // Navigation
-                this.navButtons = document.querySelectorAll('.nav-btn');
-                this.exerciseContainers = document.querySelectorAll('.exercise');
-                
-                // Controls
-                this.soundToggle = document.getElementById('soundToggle');
-                this.hapticToggle = document.getElementById('hapticToggle');
-                this.themeToggle = document.getElementById('themeToggle');
-            }
-            
-            bindEvents() {
-                // Navigation switching
-                this.navButtons.forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const exercise = e.currentTarget.dataset.exercise;
-                        this.switchExercise(exercise);
-                    });
-                });
-                
-                // Control toggles
-                this.soundToggle.addEventListener('click', () => this.toggleSound());
-                this.hapticToggle.addEventListener('click', () => this.toggleHaptic());
-                this.themeToggle.addEventListener('click', () => this.toggleTheme());
-            }
-            
-            initExercises() {
-                // Exercises are initialized when switched to
-            }
-            
-            switchExercise(exercise) {
-                // Update navigation
-                this.navButtons.forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.exercise === exercise);
-                });
-                
-                // Update exercise containers
-                this.exerciseContainers.forEach(container => {
-                    container.classList.toggle('active', container.id === `${exercise}-exercise`);
-                });
-                
-                this.currentExercise = exercise;
-                
-                // Initialize the selected exercise
-                switch(exercise) {
-                    case 'bubble-wrap':
-                        this.initBubbleWrap();
-                        break;
-                    case 'kaleidoscope':
-                        this.initKaleidoscope();
-                        break;
-                    case 'labyrinth':
-                        this.initLabyrinth();
-                        break;
-                }
-            }
-            
-            toggleSound() {
-                this.soundEnabled = !this.soundEnabled;
-                this.soundToggle.textContent = this.soundEnabled ? '🔊' : '🔇';
-                localStorage.setItem('stressball-sound', this.soundEnabled);
-                
-                // Test sound
-                if (this.soundEnabled) {
-                    this.playSound(600, 0.1, 0.1);
-                }
-            }
-            
-            toggleHaptic() {
-                this.hapticEnabled = !this.hapticEnabled;
-                this.hapticToggle.textContent = this.hapticEnabled ? '📳' : '📴';
-                localStorage.setItem('stressball-haptic', this.hapticEnabled);
-                
-                // Test haptic
-                if (this.hapticEnabled && 'vibrate' in navigator) {
-                    navigator.vibrate(50);
-                }
-            }
-            
-            toggleTheme() {
-                this.theme = this.theme === 'light' ? 'dark' : 'light';
-                document.documentElement.setAttribute('data-theme', this.theme);
-                this.themeToggle.textContent = this.theme === 'light' ? '🌙' : '☀️';
-                localStorage.setItem('stressball-theme', this.theme);
-            }
-            
-            applySettings() {
-                // Load saved settings
-                const savedSound = localStorage.getItem('stressball-sound');
-                const savedHaptic = localStorage.getItem('stressball-haptic');
-                const savedTheme = localStorage.getItem('stressball-theme');
-                
-                if (savedSound !== null) {
-                    this.soundEnabled = savedSound === 'true';
-                    this.soundToggle.textContent = this.soundEnabled ? '🔊' : '🔇';
-                }
-                
-                if (savedHaptic !== null) {
-                    this.hapticEnabled = savedHaptic === 'true';
-                    this.hapticToggle.textContent = this.hapticEnabled ? '📳' : '📴';
-                }
-                
-                if (savedTheme) {
-                    this.theme = savedTheme;
-                    document.documentElement.setAttribute('data-theme', this.theme);
-                    this.themeToggle.textContent = this.theme === 'light' ? '🌙' : '☀️';
-                }
-            }
-            
-            // ===== BUBBLE WRAP =====
-            initBubbleWrap() {
-                this.bubblePoppedCount = 0;
-                this.bubbles = [];
-                
-                const container = document.getElementById('bubbleContainer');
-                const poppedCountElement = document.getElementById('poppedCount');
-                
-                // Clear and create bubbles
-                container.innerHTML = '';
-                this.bubbles = [];
-                
-                for (let i = 0; i < 12; i++) {
-                    const bubble = document.createElement('div');
-                    bubble.className = 'bubble';
-                    bubble.style.setProperty('--i', i);
-                    
-                    // Random size variation
-                    const size = 70 + Math.random() * 30;
-                    bubble.style.width = `${size}px`;
-                    bubble.style.height = `${size}px`;
-                    
-                    // Random color variation
-                    const hue = 190 + Math.random() * 40;
-                    bubble.style.background = `radial-gradient(circle at 30% 30%, hsl(${hue}, 90%, 85%), hsl(${hue}, 80%, 65%))`;
-                    bubble.style.borderColor = `hsl(${hue}, 80%, 55%)`;
-                    
-                    container.appendChild(bubble);
-                    this.bubbles.push(bubble);
-                    
-                    // Add click/touch event
-                    bubble.addEventListener('click', () => this.popBubble(bubble, poppedCountElement));
-                    bubble.addEventListener('touchstart', (e) => {
-                        e.preventDefault();
-                        this.popBubble(bubble, poppedCountElement);
-                    });
-                }
-                
-                // Reset button
-                document.getElementById('resetBubbles').addEventListener('click', () => {
-                    this.bubblePoppedCount = 0;
-                    poppedCountElement.textContent = '0';
-                    this.initBubbleWrap();
-                    
-                    // Haptic feedback on reset
-                    if (this.hapticEnabled && 'vibrate' in navigator) {
-                        navigator.vibrate([50, 30, 50]);
-                    }
-                });
-            }
-            
-            popBubble(bubble, poppedCountElement) {
-                if (bubble.classList.contains('popped')) return;
-                
-                bubble.classList.add('popped');
-                this.bubblePoppedCount++;
-                poppedCountElement.textContent = this.bubblePoppedCount;
-                
-                // Haptic feedback
-                if (this.hapticEnabled && 'vibrate' in navigator) {
-                    navigator.vibrate(30);
-                }
-                
-                // Sound feedback
-                if (this.soundEnabled) {
-                    this.playSound(200, 0.2, 0.1);
-                }
-                
-                // Check if all bubbles are popped
-                setTimeout(() => {
-                    const popped = document.querySelectorAll('.bubble.popped').length;
-                    if (popped === this.bubbles.length) {
-                        setTimeout(() => {
-                            this.bubblePoppedCount = 0;
-                            poppedCountElement.textContent = '0';
-                            this.initBubbleWrap();
-                        }, 800);
-                    }
-                }, 300);
-            }
-            
-            // ===== KALEIDOSCOPE =====
-            initKaleidoscope() {
-                const canvas = document.getElementById('kaleidoscopeCanvas');
-                const ctx = canvas.getContext('2d');
-                const currentColorElement = document.getElementById('currentColor');
-                
-                // Setup canvas
-                const dpr = window.devicePixelRatio || 1;
-                const rect = canvas.getBoundingClientRect();
-                
-                canvas.width = rect.width * dpr;
-                canvas.height = rect.height * dpr;
-                
-                ctx.scale(dpr, dpr);
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-                ctx.lineWidth = 3;
-                
-                // Initialize state
-                let isDrawing = false;
-                let lastPoint = { x: 0, y: 0 };
-                let currentColor = this.getRandomColor();
-                let segments = 6;
-                let points = [];
-                
-                // Set initial color
-                currentColorElement.style.backgroundColor = currentColor;
-                ctx.strokeStyle = currentColor;
-                
-                // Clear canvas with background
-                ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--surface-color');
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                // Drawing functions
-                const getCanvasPoint = (e) => {
-                    const rect = canvas.getBoundingClientRect();
-                    return {
-                        x: e.clientX - rect.left,
-                        y: e.clientY - rect.top
-                    };
-                };
-                
-                const drawMirroredCurve = (points) => {
-                    const centerX = canvas.width / dpr / 2;
-                    const centerY = canvas.height / dpr / 2;
-                    const angleStep = (2 * Math.PI) / segments;
-                    
-                    ctx.strokeStyle = currentColor;
-                    
-                    for (let i = 0; i < segments; i++) {
-                        ctx.save();
-                        ctx.translate(centerX, centerY);
-                        ctx.rotate(i * angleStep);
-                        
-                        // Draw curve
-                        ctx.beginPath();
-                        if (points.length === 2) {
-                            ctx.moveTo(points[0].x - centerX, points[0].y - centerY);
-                            ctx.lineTo(points[1].x - centerX, points[1].y - centerY);
-                        } else if (points.length >= 3) {
-                            ctx.moveTo(points[0].x - centerX, points[0].y - centerY);
-                            ctx.quadraticCurveTo(
-                                points[1].x - centerX, 
-                                points[1].y - centerY,
-                                points[2].x - centerX, 
-                                points[2].y - centerY
-                            );
-                        }
-                        ctx.stroke();
-                        
-                        ctx.restore();
-                    }
-                };
-                
-                // Event handlers
-                const startDrawing = (e) => {
-                    isDrawing = true;
-                    const point = getCanvasPoint(e);
-                    lastPoint = point;
-                    points = [point];
-                };
-                
-                const draw = (e) => {
-                    if (!isDrawing) return;
-                    
-                    const point = getCanvasPoint(e);
-                    points.push(point);
-                    
-                    if (points.length > 3) {
-                        points.shift();
-                    }
-                    
-                    if (points.length > 1) {
-                        drawMirroredCurve(points);
-                    }
-                    
-                    lastPoint = point;
-                };
-                
-                const stopDrawing = () => {
-                    isDrawing = false;
-                    points = [];
-                };
-                
-                // Bind events
-                canvas.addEventListener('mousedown', startDrawing);
-                canvas.addEventListener('mousemove', draw);
-                canvas.addEventListener('mouseup', stopDrawing);
-                canvas.addEventListener('mouseout', stopDrawing);
-                
-                // Touch events
-                canvas.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    startDrawing(e.touches[0]);
-                });
-                canvas.addEventListener('touchmove', (e) => {
-                    e.preventDefault();
-                    draw(e.touches[0]);
-                });
-                canvas.addEventListener('touchend', stopDrawing);
-                
-                // Control buttons
-                document.getElementById('clearCanvas').addEventListener('click', () => {
-                    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--surface-color');
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    
-                    if (this.soundEnabled) {
-                        this.playSound(400, 0.1, 0.2);
-                    }
-                });
-                
-                document.getElementById('changeColor').addEventListener('click', () => {
-                    currentColor = this.getRandomColor();
-                    currentColorElement.style.backgroundColor = currentColor;
-                    ctx.strokeStyle = currentColor;
-                    
-                    if (this.soundEnabled) {
-                        this.playSound(600, 0.1, 0.1);
-                    }
-                });
-                
-                document.getElementById('changeSegments').addEventListener('click', () => {
-                    segments = segments === 6 ? 8 : segments === 8 ? 10 : 6;
-                    document.getElementById('segmentCount').textContent = segments;
-                    
-                    if (this.soundEnabled) {
-                        this.playSound(300, 0.1, 0.1);
-                    }
-                });
-            }
-            
-            getRandomColor() {
-                const hues = [0, 30, 60, 120, 180, 240, 300, 330];
-                const randomHue = hues[Math.floor(Math.random() * hues.length)];
-                return `hsl(${randomHue}, 75%, 55%)`;
-            }
-            
-            // ===== LABYRINTH =====
-            initLabyrinth() {
-                const container = document.getElementById('labyrinth');
-                const ball = document.getElementById('labyrinthBall');
-                const center = document.getElementById('labyrinthCenter');
-                const timeSpentElement = document.getElementById('timeSpent');
-                const successCountElement = document.getElementById('successCount');
-                
-                // Clear previous walls
-                container.innerHTML = '';
-                
-                // Setup dimensions
-                const size = container.clientWidth;
-                const ballSize = 36;
-                
-                // Set center position
-                const centerX = size - 100;
-                const centerY = size - 100;
-                center.style.left = `${centerX}px`;
-                center.style.top = `${centerY}px`;
-                
-                // Initialize ball position
-                let ballX = 40;
-                let ballY = 40;
-                ball.style.left = `${ballX}px`;
-                ball.style.top = `${ballY}px`;
-                
-                // Generate walls
-                const walls = [];
-                const wallThickness = 15;
-                
-                // Boundary walls
-                walls.push({ x: 0, y: 0, width: size, height: wallThickness });
-                walls.push({ x: 0, y: 0, width: wallThickness, height: size });
-                walls.push({ x: size - wallThickness, y: 0, width: wallThickness, height: size });
-                walls.push({ x: 0, y: size - wallThickness, width: size, height: wallThickness });
-                
-                // Random interior walls (fewer for easier gameplay)
-                for (let i = 0; i < 5; i++) {
-                    const isHorizontal = Math.random() > 0.5;
-                    let x, y, width, height;
-                    
-                    if (isHorizontal) {
-                        x = Math.random() * (size - 200) + 50;
-                        y = Math.random() * (size - 200) + 50;
-                        width = 60 + Math.random() * 120;
-                        height = 12;
-                    } else {
-                        x = Math.random() * (size - 200) + 50;
-                        y = Math.random() * (size - 200) + 50;
-                        width = 12;
-                        height = 60 + Math.random() * 120;
-                    }
-                    
-                    // Don't block start or end completely
-                    const startBlocked = this.rectOverlap(x, y, width, height, 30, 30, 60, 60);
-                    const endBlocked = this.rectOverlap(x, y, width, height, centerX - 30, centerY - 30, 80, 80);
-                    
-                    if (!startBlocked && !endBlocked) {
-                        walls.push({ x, y, width, height });
-                    }
-                }
-                
-                // Draw walls
-                walls.forEach(wall => {
-                    const wallElement = document.createElement('div');
-                    wallElement.className = 'labyrinth-wall';
-                    wallElement.style.left = `${wall.x}px`;
-                    wallElement.style.top = `${wall.y}px`;
-                    wallElement.style.width = `${wall.width}px`;
-                    wallElement.style.height = `${wall.height}px`;
-                    container.appendChild(wallElement);
-                });
-                
-                // Game state
-                let successCount = 0;
-                let startTime = Date.now();
-                let timerInterval;
-                let isTiltMode = true;
-                let isDragging = false;
-                let beta = 0, gamma = 0;
-                
-                // Start timer
-                const updateTimer = () => {
-                    const timeSpent = Math.floor((Date.now() - startTime) / 1000);
-                    timeSpentElement.textContent = `${timeSpent}s`;
-                };
-                
-                if (timerInterval) clearInterval(timerInterval);
-                timerInterval = setInterval(updateTimer, 1000);
-                updateTimer();
-                
-                // Collision detection
-                const checkCollision = (x, y) => {
-                    for (const wall of walls) {
-                        if (this.rectOverlap(x, y, ballSize, ballSize, wall.x, wall.y, wall.width, wall.height)) {
-                            return true;
-                        }
-                    }
-                    return false;
-                };
-                
-                // Move ball with boundary checking
-                const moveBall = (dx, dy) => {
-                    const newX = ballX + dx;
-                    const newY = ballY + dy;
-                    
-                    // Boundaries
-                    const minX = wallThickness;
-                    const minY = wallThickness;
-                    const maxX = size - wallThickness - ballSize;
-                    const maxY = size - wallThickness - ballSize;
-                    
-                    let finalX = Math.max(minX, Math.min(maxX, newX));
-                    let finalY = Math.max(minY, Math.min(maxY, newY));
-                    
-                    // Check wall collisions
-                    if (!checkCollision(finalX, finalY)) {
-                        ballX = finalX;
-                        ballY = finalY;
-                        ball.style.left = `${ballX}px`;
-                        ball.style.top = `${ballY}px`;
-                        
-                        // Check if reached center
-                        if (this.rectOverlap(ballX, ballY, ballSize, ballSize, centerX - 25, centerY - 25, 75, 75)) {
-                            successCount++;
-                            successCountElement.textContent = successCount;
-                            
-                            // Feedback
-                            if (this.hapticEnabled && 'vibrate' in navigator) {
-                                navigator.vibrate([50, 30, 50, 30, 50]);
-                            }
-                            
-                            if (this.soundEnabled) {
-                                this.playSound(600, 0.2, 0.3);
-                            }
-                            
-                            // Visual feedback
-                            ball.style.animation = 'pulse 0.5s 3';
-                            setTimeout(() => {
-                                ball.style.animation = '';
-                                // Reset ball position
-                                ballX = 40;
-                                ballY = 40;
-                                ball.style.left = `${ballX}px`;
-                                ball.style.top = `${ballY}px`;
-                                
-                                // Small haptic on reset
-                                if (this.hapticEnabled && 'vibrate' in navigator) {
-                                    navigator.vibrate(30);
-                                }
-                            }, 1500);
-                        }
-                    } else {
-                        // Collision feedback
-                        if (this.hapticEnabled && 'vibrate' in navigator) {
-                            navigator.vibrate(10);
-                        }
-                    }
-                };
-                
-                // Tilt control
-                if (typeof DeviceOrientationEvent !== 'undefined' && 
-                    typeof DeviceOrientationEvent.requestPermission === 'function') {
-                    DeviceOrientationEvent.requestPermission()
-                        .then(permissionState => {
-                            if (permissionState === 'granted') {
-                                console.log('Gyroscope permission granted');
-                            }
-                        })
-                        .catch(console.error);
-                }
-                
-                window.addEventListener('deviceorientation', (e) => {
-                    if (isTiltMode) {
-                        beta = (e.beta || 0) / 20; // Front-back tilt
-                        gamma = (e.gamma || 0) / 20; // Left-right tilt
-                    }
-                });
-                
-                // Animation loop for tilt mode
-                const animate = () => {
-                    if (isTiltMode) {
-                        moveBall(gamma, beta);
-                    }
-                    requestAnimationFrame(animate);
-                };
-                animate();
-                
-                // Touch control
-                container.addEventListener('touchstart', (e) => {
-                    if (!isTiltMode) {
-                        e.preventDefault();
-                        isDragging = true;
-                    }
-                });
-                
-                container.addEventListener('touchmove', (e) => {
-                    if (!isTiltMode && isDragging) {
-                        e.preventDefault();
-                        const touch = e.touches[0];
-                        const rect = container.getBoundingClientRect();
-                        const touchX = touch.clientX - rect.left;
-                        const touchY = touch.clientY - rect.top;
-                        
-                        // Move ball toward touch point
-                        const dx = (touchX - ballX - ballSize/2) * 0.1;
-                        const dy = (touchY - ballY - ballSize/2) * 0.1;
-                        
-                        moveBall(dx, dy);
-                    }
-                });
-                
-                container.addEventListener('touchend', () => {
-                    isDragging = false;
-                });
-                
-                // Control mode buttons
-                document.getElementById('tiltControl').addEventListener('click', () => {
-                    isTiltMode = true;
-                    document.getElementById('tiltControl').classList.add('active');
-                    document.getElementById('touchControl').classList.remove('active');
-                    
-                    if (this.soundEnabled) {
-                        this.playSound(500, 0.1, 0.1);
-                    }
-                });
-                
-                document.getElementById('touchControl').addEventListener('click', () => {
-                    isTiltMode = false;
-                    document.getElementById('touchControl').classList.add('active');
-                    document.getElementById('tiltControl').classList.remove('active');
-                    
-                    if (this.soundEnabled) {
-                        this.playSound(500, 0.1, 0.1);
-                    }
-                });
-                
-                // Reset button
-                document.getElementById('resetLabyrinth').addEventListener('click', () => {
-                    ballX = 40;
-                    ballY = 40;
-                    ball.style.left = `${ballX}px`;
-                    ball.style.top = `${ballY}px`;
-                    
-                    if (this.hapticEnabled && 'vibrate' in navigator) {
-                        navigator.vibrate(30);
-                    }
-                });
-            }
-            
-            rectOverlap(ax, ay, aw, ah, bx, by, bw, bh) {
-                return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
-            }
-            
-            playSound(frequency, duration, volume) {
-                try {
-                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    const oscillator = audioContext.createOscillator();
-                    const gainNode = audioContext.createGain();
-                    
-                    oscillator.connect(gainNode);
-                    gainNode.connect(audioContext.destination);
-                    
-                    oscillator.frequency.value = frequency;
-                    oscillator.type = 'sine';
-                    
-                    gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
-                    
-                    oscillator.start(audioContext.currentTime);
-                    oscillator.stop(audioContext.currentTime + duration);
-                } catch (e) {
-                    // Audio not supported in this environment
-                }
-            }
-        }
-        
-        // Initialize the app when DOM is loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            window.stressBallApp = new StressBallApp();
-        });
-        // ======== JAVASCRIPT ENDS HERE ========
-    </script>
+    <!-- Scripts -->
+    <script src="app.js"></script>
 </body>
 </html>

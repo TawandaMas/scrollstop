@@ -1,21 +1,10 @@
-const CACHE_NAME = 'stressball-v1';
+const CACHE_NAME = 'stressball-v1.0.0';
 const urlsToCache = [
   './',
   './index.html',
-  './styles.css',
+  './style.css',
   './app.js',
-  './manifest.json',
-  './exercises/bubble-wrap.js',
-  './exercises/kaleidoscope.js',
-  './exercises/labyrinth.js',
-  './icons/icon-72x72.png',
-  './icons/icon-96x96.png',
-  './icons/icon-128x128.png',
-  './icons/icon-144x144.png',
-  './icons/icon-152x152.png',
-  './icons/icon-192x192.png',
-  './icons/icon-384x384.png',
-  './icons/icon-512x512.png'
+  './manifest.json'
 ];
 
 // Install event
@@ -55,10 +44,7 @@ self.addEventListener('fetch', event => {
           return response;
         }
         
-        // Clone the request
-        const fetchRequest = event.request.clone();
-        
-        return fetch(fetchRequest).then(response => {
+        return fetch(event.request).then(response => {
           // Check if valid response
           if (!response || response.status !== 200 || response.type !== 'basic') {
             return response;
@@ -71,7 +57,7 @@ self.addEventListener('fetch', event => {
             .then(cache => {
               cache.put(event.request, responseToCache);
             });
-            
+          
           return response;
         });
       })

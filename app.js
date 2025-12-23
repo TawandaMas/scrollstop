@@ -1,10 +1,11 @@
 // Main App Class
 class StressBallApp {
     constructor() {
-        this.currentExercise = 'bubble-wrap';
+        this.currentSection = 'bubble-wrap';
         this.soundEnabled = false;
         this.hapticEnabled = true;
         this.theme = 'light';
+        this.deferredPrompt = null;
         
         this.init();
     }
@@ -12,78 +13,104 @@ class StressBallApp {
     init() {
         this.cacheElements();
         this.bindEvents();
-        this.initExercises();
+        this.initSections();
         this.applySettings();
+        this.setupPWA();
     }
     
     cacheElements() {
         // Navigation
-        this.navButtons = document.querySelectorAll('.nav-btn');
-        this.exerciseContainers = document.querySelectorAll('.exercise');
+        this.tabs = document.querySelectorAll('.tab');
+        this.sections = document.querySelectorAll('.section');
         
-        // Controls
+        // Settings
+        this.themeToggle = document.getElementById('themeToggle');
         this.soundToggle = document.getElementById('soundToggle');
         this.hapticToggle = document.getElementById('hapticToggle');
-        this.themeToggle = document.getElementById('themeToggle');
         
-        // Bubble Wrap
-        this.bubbleContainer = document.getElementById('bubbleContainer');
-        this.poppedCountElement = document.getElementById('poppedCount');
-        
-        // Kaleidoscope
-        this.canvas = document.getElementById('kaleidoscopeCanvas');
-        this.currentColorElement = document.getElementById('currentColor');
-        
-        // Labyrinth
-        this.labyrinthContainer = document.getElementById('labyrinth');
-        this.labyrinthBall = document.getElementById('labyrinthBall');
-        this.labyrinthCenter = document.getElementById('labyrinthCenter');
+        // Install prompt
+        this.installPrompt = document.getElementById('installPrompt');
+        this.installBtn = document.getElementById('installBtn');
+        this.dismissPrompt = document.getElementById('dismissPrompt');
     }
     
     bindEvents() {
         // Navigation
-        this.navButtons.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const exercise = e.currentTarget.dataset.exercise;
-                this.switchExercise(exercise);
+        this.tabs.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                const target = e.currentTarget.dataset.target;
+                this.switchSection(target);
             });
         });
         
-        // Control toggles
+        // Settings
+        this.themeToggle.addEventListener('click', () => this.toggleTheme());
         this.soundToggle.addEventListener('click', () => this.toggleSound());
         this.hapticToggle.addEventListener('click', () => this.toggleHaptic());
-        this.themeToggle.addEventListener('click', () => this.toggleTheme());
+        
+        // Install prompt
+        this.installBtn?.addEventListener('click', () => this.installApp());
+        this.dismissPrompt?.addEventListener('click', () => {
+            this.installPrompt.classList.add('hidden');
+        });
+        
+        // PWA events
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            this.deferredPrompt = e;
+            this.showInstallPrompt();
+        });
+        
+        window.addEventListener('appinstalled', () => {
+            this.installPrompt.classList.add('hidden');
+            this.deferredPrompt = null;
+        });
     }
     
-    initExercises() {
+    initSections() {
         this.initBubbleWrap();
         this.initKaleidoscope();
         this.initLabyrinth();
     }
     
-    switchExercise(exercise) {
-        // Update navigation
-        this.navButtons.forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.exercise === exercise);
+    switchSection(sectionId) {
+        // Update tabs
+        this.tabs.forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.target === sectionId);
         });
         
-        // Update exercise containers
-        this.exerciseContainers.forEach(container => {
-            container.classList.toggle('active', container.id === `${exercise}-exercise`);
+        // Update sections
+        this.sections.forEach(section => {
+            section.classList.toggle('active', section.id === sectionId);
         });
         
-        this.currentExercise = exercise;
+        this.currentSection = sectionId;
+    }
+    
+    toggleTheme() {
+        this.theme = this.theme === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', this.theme);
+        this.themeToggle.querySelector('.icon').textContent = 
+            this.theme === 'light' ? '🌙' : '☀️';
+        localStorage.setItem('stressball-theme', this.theme);
     }
     
     toggleSound() {
         this.soundEnabled = !this.soundEnabled;
-        this.soundToggle.textContent = this.soundEnabled ? '🔊' : '🔇';
+        this.soundToggle.querySelector('.icon').textContent = 
+            this.soundEnabled ? '🔊' : '🔇';
         localStorage.setItem('stressball-sound', this.soundEnabled);
+        
+        // Test sound
+        if (this.soundEnabled) {
+            this.playSound(600, 0.1);
+        }
     }
     
     toggleHaptic() {
         this.hapticEnabled = !this.hapticEnabled;
-        this.hapticToggle.textContent = this.hapticEnabled ? '📳' : '📴';
+        this.hapticToggle.querySelector('.icon').textContent = 
+            this.hapticEnabled ? '📳' : '📴';
         localStorage.setItem('stressball-haptic', this.hapticEnabled);
         
         // Test haptic
@@ -92,127 +119,73 @@ class StressBallApp {
         }
     }
     
-    toggleTheme() {
-        this.theme = this.theme === 'light' ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', this.theme);
-        this.themeToggle.textContent = this.theme === 'light' ? '🌙' : '☀️';
-        localStorage.setItem('stressball-theme', this.theme);
-    }
-    
     applySettings() {
-        // Load saved settings
-        const savedSound = localStorage.getItem('stressball-sound');
-        const savedHaptic = localStorage.getItem('stressball-haptic');
+        // Theme
         const savedTheme = localStorage.getItem('stressball-theme');
-        
-        if (savedSound !== null) {
-            this.soundEnabled = savedSound === 'true';
-            this.soundToggle.textContent = this.soundEnabled ? '🔊' : '🔇';
-        }
-        
-        if (savedHaptic !== null) {
-            this.hapticEnabled = savedHaptic === 'true';
-            this.hapticToggle.textContent = this.hapticEnabled ? '📳' : '📴';
-        }
-        
         if (savedTheme) {
             this.theme = savedTheme;
             document.documentElement.setAttribute('data-theme', this.theme);
-            this.themeToggle.textContent = this.theme === 'light' ? '🌙' : '☀️';
+            this.themeToggle.querySelector('.icon').textContent = 
+                this.theme === 'light' ? '🌙' : '☀️';
+        }
+        
+        // Sound
+        const savedSound = localStorage.getItem('stressball-sound');
+        if (savedSound !== null) {
+            this.soundEnabled = savedSound === 'true';
+            this.soundToggle.querySelector('.icon').textContent = 
+                this.soundEnabled ? '🔊' : '🔇';
+        }
+        
+        // Haptic
+        const savedHaptic = localStorage.getItem('stressball-haptic');
+        if (savedHaptic !== null) {
+            this.hapticEnabled = savedHaptic === 'true';
+            this.hapticToggle.querySelector('.icon').textContent = 
+                this.hapticEnabled ? '📳' : '📴';
         }
     }
     
-    // BUBBLE WRAP
-    initBubbleWrap() {
-        this.bubblePoppedCount = 0;
-        this.bubbles = [];
-        this.createBubbles();
-        this.bindBubbleEvents();
-    }
-    
-    createBubbles() {
-        this.bubbleContainer.innerHTML = '';
-        this.bubbles = [];
-        
-        for (let i = 0; i < 15; i++) {
-            const bubble = document.createElement('div');
-            bubble.className = 'bubble';
-            bubble.dataset.id = i;
-            
-            // Random size
-            const size = 60 + Math.random() * 40;
-            bubble.style.width = `${size}px`;
-            bubble.style.height = `${size}px`;
-            
-            // Random color
-            const hue = 190 + Math.random() * 40;
-            bubble.style.backgroundColor = `hsl(${hue}, 80%, 85%)`;
-            bubble.style.borderColor = `hsl(${hue}, 80%, 65%)`;
-            
-            this.bubbleContainer.appendChild(bubble);
-            this.bubbles.push(bubble);
+    setupPWA() {
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => {
+                        console.log('SW registered:', registration);
+                    })
+                    .catch(error => {
+                        console.log('SW registration failed:', error);
+                    });
+            });
         }
     }
     
-    bindBubbleEvents() {
-        this.bubbleContainer.addEventListener('click', (e) => {
-            if (e.target.classList.contains('bubble') && !e.target.classList.contains('popped')) {
-                this.popBubble(e.target);
-            }
-        });
-        
-        // Touch events for mobile
-        this.bubbleContainer.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            const touch = e.touches[0];
-            const element = document.elementFromPoint(touch.clientX, touch.clientY);
-            
-            if (element && element.classList.contains('bubble') && !element.classList.contains('popped')) {
-                this.popBubble(element);
-            }
-        }, { passive: false });
-        
-        // Reset button
-        document.getElementById('resetBubbles').addEventListener('click', () => {
-            this.bubblePoppedCount = 0;
-            this.poppedCountElement.textContent = '0';
-            this.createBubbles();
-            
-            if (this.hapticEnabled && 'vibrate' in navigator) {
-                navigator.vibrate([50, 30, 50]);
-            }
-        });
+    showInstallPrompt() {
+        const dismissed = localStorage.getItem('stressball-install-dismissed');
+        if (!dismissed && this.deferredPrompt) {
+            setTimeout(() => {
+                this.installPrompt.classList.remove('hidden');
+            }, 3000);
+        }
     }
     
-    popBubble(bubble) {
-        bubble.classList.add('popped');
-        this.bubblePoppedCount++;
-        this.poppedCountElement.textContent = this.bubblePoppedCount;
+    async installApp() {
+        if (!this.deferredPrompt) return;
         
-        // Haptic feedback
-        if (this.hapticEnabled && 'vibrate' in navigator) {
-            navigator.vibrate(30);
+        this.deferredPrompt.prompt();
+        const { outcome } = await this.deferredPrompt.userChoice;
+        
+        if (outcome === 'accepted') {
+            console.log('User installed the app');
         }
         
-        // Pop sound
-        if (this.soundEnabled) {
-            this.playPopSound();
-        }
-        
-        // Check if all bubbles are popped
-        setTimeout(() => {
-            const popped = document.querySelectorAll('.bubble.popped').length;
-            if (popped === this.bubbles.length) {
-                setTimeout(() => {
-                    this.createBubbles();
-                    this.bubblePoppedCount = 0;
-                    this.poppedCountElement.textContent = '0';
-                }, 500);
-            }
-        }, 100);
+        this.deferredPrompt = null;
+        this.installPrompt.classList.add('hidden');
     }
     
-    playPopSound() {
+    playSound(frequency, duration) {
+        if (!this.soundEnabled) return;
+        
         try {
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             const oscillator = audioContext.createOscillator();
@@ -221,451 +194,548 @@ class StressBallApp {
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
             
-            oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
-            oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.1);
+            oscillator.frequency.value = frequency;
             oscillator.type = 'sine';
             
-            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
             
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.1);
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + duration);
         } catch (e) {
-            console.log('Audio error:', e);
+            // Audio not supported
         }
     }
     
-    // KALEIDOSCOPE
+    // ===== BUBBLE WRAP =====
+    initBubbleWrap() {
+        this.bubbleCount = 0;
+        this.bubbles = [];
+        const grid = document.getElementById('bubbleGrid');
+        const popCountElement = document.getElementById('popCount');
+        
+        // Create bubbles
+        for (let i = 0; i < 15; i++) {
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            bubble.style.animationDelay = `${i * 0.1}s`;
+            
+            // Random size
+            const size = 60 + Math.random() * 40;
+            bubble.style.width = `${size}px`;
+            bubble.style.height = `${size}px`;
+            
+            // Random color
+            const hue = 190 + Math.random() * 60;
+            bubble.style.background = `radial-gradient(circle at 30% 30%, hsl(${hue}, 90%, 85%), hsl(${hue}, 80%, 65%))`;
+            bubble.style.borderColor = `hsl(${hue}, 80%, 55%)`;
+            
+            bubble.addEventListener('click', () => this.popBubble(bubble, popCountElement));
+            bubble.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.popBubble(bubble, popCountElement);
+            });
+            
+            grid.appendChild(bubble);
+            this.bubbles.push(bubble);
+        }
+        
+        // Reset button
+        document.getElementById('resetBubbles').addEventListener('click', () => {
+            this.bubbleCount = 0;
+            popCountElement.textContent = '0';
+            
+            // Remove all bubbles
+            grid.innerHTML = '';
+            this.bubbles = [];
+            
+            // Create new bubbles
+            this.initBubbleWrap();
+            
+            // Haptic feedback
+            if (this.hapticEnabled && 'vibrate' in navigator) {
+                navigator.vibrate([50, 30, 50]);
+            }
+        });
+    }
+    
+    popBubble(bubble, counter) {
+        if (bubble.classList.contains('popped')) return;
+        
+        bubble.classList.add('popped');
+        this.bubbleCount++;
+        counter.textContent = this.bubbleCount;
+        
+        // Haptic feedback
+        if (this.hapticEnabled && 'vibrate' in navigator) {
+            navigator.vibrate(30);
+        }
+        
+        // Sound feedback
+        if (this.soundEnabled) {
+            this.playSound(200, 0.1);
+        }
+        
+        // Check if all bubbles are popped
+        setTimeout(() => {
+            const popped = document.querySelectorAll('.bubble.popped').length;
+            if (popped === this.bubbles.length) {
+                setTimeout(() => {
+                    // Auto-reset
+                    this.bubbleCount = 0;
+                    counter.textContent = '0';
+                    this.initBubbleWrap();
+                }, 1000);
+            }
+        }, 300);
+    }
+    
+    // ===== KALEIDOSCOPE =====
     initKaleidoscope() {
-        this.ctx = this.canvas.getContext('2d');
-        this.isDrawing = false;
-        this.lastPoint = { x: 0, y: 0 };
-        this.currentColor = this.getRandomColor();
-        this.segments = 6;
-        this.points = [];
+        const canvas = document.getElementById('kaleidoscopeCanvas');
+        const ctx = canvas.getContext('2d');
+        const colorDisplay = document.getElementById('currentColor');
+        const segmentCountElement = document.getElementById('segmentCount');
         
-        this.setupCanvas();
-        this.bindKaleidoscopeEvents();
-        this.updateColorIndicator();
-        this.clearCanvas();
-    }
-    
-    setupCanvas() {
-        const rect = this.canvas.getBoundingClientRect();
-        const dpr = window.devicePixelRatio || 1;
+        // Setup canvas
+        const setupCanvas = () => {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            
+            ctx.scale(dpr, dpr);
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.lineWidth = 3;
+        };
         
-        this.canvas.width = rect.width * dpr;
-        this.canvas.height = rect.height * dpr;
+        // Drawing state
+        let isDrawing = false;
+        let lastPoint = { x: 0, y: 0 };
+        let currentColor = this.getRandomColor();
+        let segments = 6;
         
-        this.ctx.scale(dpr, dpr);
-        this.ctx.lineCap = 'round';
-        this.ctx.lineJoin = 'round';
-        this.ctx.lineWidth = 3;
-    }
-    
-    bindKaleidoscopeEvents() {
-        // Mouse events
-        this.canvas.addEventListener('mousedown', (e) => this.startDrawing(e));
-        this.canvas.addEventListener('mousemove', (e) => this.draw(e));
-        this.canvas.addEventListener('mouseup', () => this.stopDrawing());
-        this.canvas.addEventListener('mouseout', () => this.stopDrawing());
+        // Initialize
+        setupCanvas();
+        colorDisplay.style.backgroundColor = currentColor;
         
-        // Touch events
-        this.canvas.addEventListener('touchstart', (e) => {
+        // Clear canvas
+        const clearCanvas = () => {
+            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--surface');
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            if (this.soundEnabled) {
+                this.playSound(400, 0.2);
+            }
+        };
+        
+        clearCanvas();
+        
+        // Drawing functions
+        const getCanvasPoint = (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            return { x, y };
+        };
+        
+        const drawSegment = (points, segmentIndex) => {
+            const centerX = canvas.width / (window.devicePixelRatio || 1) / 2;
+            const centerY = canvas.height / (window.devicePixelRatio || 1) / 2;
+            const angle = (2 * Math.PI * segmentIndex) / segments;
+            
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(angle);
+            
+            ctx.beginPath();
+            if (points.length === 2) {
+                ctx.moveTo(points[0].x - centerX, points[0].y - centerY);
+                ctx.lineTo(points[1].x - centerX, points[1].y - centerY);
+            } else if (points.length >= 3) {
+                const midX = (points[0].x + points[1].x + points[2].x) / 3 - centerX;
+                const midY = (points[0].y + points[1].y + points[2].y) / 3 - centerY;
+                
+                ctx.moveTo(points[0].x - centerX, points[0].y - centerY);
+                ctx.quadraticCurveTo(midX, midY, points[2].x - centerX, points[2].y - centerY);
+            }
+            ctx.stroke();
+            
+            ctx.restore();
+        };
+        
+        const draw = (points) => {
+            ctx.strokeStyle = currentColor;
+            
+            for (let i = 0; i < segments; i++) {
+                drawSegment(points, i);
+                
+                // Add mirrored segment for more complex patterns
+                if (segments > 6) {
+                    drawSegment(points.map(p => ({ 
+                        x: p.x, 
+                        y: canvas.height / (window.devicePixelRatio || 1) - p.y 
+                    })), i);
+                }
+            }
+        };
+        
+        // Event handlers
+        const startDrawing = (e) => {
+            isDrawing = true;
+            lastPoint = getCanvasPoint(e);
+        };
+        
+        const continueDrawing = (e) => {
+            if (!isDrawing) return;
+            
+            const currentPoint = getCanvasPoint(e);
+            const points = [lastPoint, currentPoint];
+            
+            // Add middle point for curve
+            const midX = (lastPoint.x + currentPoint.x) / 2;
+            const midY = (lastPoint.y + currentPoint.y) / 2;
+            points.splice(1, 0, { x: midX, y: midY });
+            
+            draw(points);
+            lastPoint = currentPoint;
+        };
+        
+        const stopDrawing = () => {
+            isDrawing = false;
+        };
+        
+        // Bind events
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', continueDrawing);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+        
+        canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            this.startDrawing(e.touches[0]);
+            startDrawing(e.touches[0]);
         });
         
-        this.canvas.addEventListener('touchmove', (e) => {
+        canvas.addEventListener('touchmove', (e) => {
             e.preventDefault();
-            this.draw(e.touches[0]);
+            continueDrawing(e.touches[0]);
         });
         
-        this.canvas.addEventListener('touchend', () => this.stopDrawing());
+        canvas.addEventListener('touchend', stopDrawing);
         
         // Control buttons
-        document.getElementById('clearCanvas').addEventListener('click', () => this.clearCanvas());
-        document.getElementById('changeColor').addEventListener('click', () => this.changeColor());
-        document.getElementById('changeSegments').addEventListener('click', () => this.changeSegments());
-    }
-    
-    startDrawing(e) {
-        this.isDrawing = true;
-        const point = this.getCanvasPoint(e);
-        this.lastPoint = point;
-        this.points = [point];
-    }
-    
-    draw(e) {
-        if (!this.isDrawing) return;
+        document.getElementById('clearCanvas').addEventListener('click', clearCanvas);
         
-        const point = this.getCanvasPoint(e);
-        this.points.push(point);
-        
-        if (this.points.length > 3) {
-            this.points.shift();
-        }
-        
-        if (this.points.length > 1) {
-            this.drawMirroredCurve(this.points);
-        }
-        
-        this.lastPoint = point;
-    }
-    
-    stopDrawing() {
-        this.isDrawing = false;
-        this.points = [];
-    }
-    
-    getCanvasPoint(e) {
-        const rect = this.canvas.getBoundingClientRect();
-        return {
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top
-        };
-    }
-    
-    drawMirroredCurve(points) {
-        const centerX = this.canvas.width / (window.devicePixelRatio || 1) / 2;
-        const centerY = this.canvas.height / (window.devicePixelRatio || 1) / 2;
-        const angleStep = (2 * Math.PI) / this.segments;
-        
-        this.ctx.strokeStyle = this.currentColor;
-        
-        for (let i = 0; i < this.segments; i++) {
-            this.ctx.save();
-            this.ctx.translate(centerX, centerY);
-            this.ctx.rotate(i * angleStep);
+        document.getElementById('changeColor').addEventListener('click', () => {
+            currentColor = this.getRandomColor();
+            colorDisplay.style.backgroundColor = currentColor;
             
-            this.drawCurveSegment(points, centerX, centerY);
-            
-            // Mirror for more complex patterns
-            if (this.segments > 6) {
-                this.ctx.scale(1, -1);
-                this.drawCurveSegment(points, centerX, centerY);
+            if (this.soundEnabled) {
+                this.playSound(600, 0.1);
             }
-            
-            this.ctx.restore();
-        }
-    }
-    
-    drawCurveSegment(points, centerX, centerY) {
-        this.ctx.beginPath();
+        });
         
-        if (points.length === 2) {
-            this.ctx.moveTo(points[0].x - centerX, points[0].y - centerY);
-            this.ctx.lineTo(points[1].x - centerX, points[1].y - centerY);
-        } else if (points.length >= 3) {
-            this.ctx.moveTo(points[0].x - centerX, points[0].y - centerY);
-            this.ctx.quadraticCurveTo(
-                points[1].x - centerX, 
-                points[1].y - centerY,
-                points[2].x - centerX, 
-                points[2].y - centerY
-            );
-        }
+        document.getElementById('increaseSegments').addEventListener('click', () => {
+            if (segments < 12) {
+                segments += 2;
+                segmentCountElement.textContent = segments;
+                
+                if (this.soundEnabled) {
+                    this.playSound(500, 0.05);
+                }
+            }
+        });
         
-        this.ctx.stroke();
-    }
-    
-    clearCanvas() {
-        this.ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--surface-color');
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    }
-    
-    changeColor() {
-        this.currentColor = this.getRandomColor();
-        this.updateColorIndicator();
-    }
-    
-    changeSegments() {
-        this.segments = this.segments === 6 ? 8 : this.segments === 8 ? 10 : 6;
-        document.getElementById('segmentCount').textContent = this.segments;
+        document.getElementById('decreaseSegments').addEventListener('click', () => {
+            if (segments > 4) {
+                segments -= 2;
+                segmentCountElement.textContent = segments;
+                
+                if (this.soundEnabled) {
+                    this.playSound(300, 0.05);
+                }
+            }
+        });
+        
+        // Resize handling
+        window.addEventListener('resize', () => {
+            setupCanvas();
+            clearCanvas();
+        });
     }
     
     getRandomColor() {
         const hues = [0, 30, 60, 120, 180, 240, 300, 330];
         const randomHue = hues[Math.floor(Math.random() * hues.length)];
-        return `hsl(${randomHue}, 70%, 50%)`;
+        return `hsl(${randomHue}, 75%, 55%)`;
     }
     
-    updateColorIndicator() {
-        if (this.currentColorElement) {
-            this.currentColorElement.style.backgroundColor = this.currentColor;
-        }
-    }
-    
-    // LABYRINTH
+    // ===== LABYRINTH =====
     initLabyrinth() {
-        this.ballX = 30;
-        this.ballY = 30;
-        this.centerX = 0;
-        this.centerY = 0;
-        this.isTiltMode = true;
-        this.successCount = 0;
-        this.startTime = Date.now();
-        this.timerInterval = null;
-        this.timeSpent = 0;
+        const container = document.getElementById('labyrinth');
+        const ball = document.getElementById('ball');
+        const goal = document.getElementById('goal');
+        const timeSpentElement = document.getElementById('timeSpent');
+        const successCountElement = document.getElementById('successCount');
         
-        this.beta = 0;
-        this.gamma = 0;
-        this.isDragging = false;
-        this.walls = [];
+        // Clear previous walls
+        container.innerHTML = '';
         
-        this.setupLabyrinth();
-        this.bindLabyrinthEvents();
-        this.startTimer();
-        this.requestDeviceOrientation();
-        this.animationLoop();
-    }
-    
-    setupLabyrinth() {
-        this.labyrinthContainer.innerHTML = '';
-        this.walls = [];
+        // Setup dimensions
+        const size = 400;
+        container.style.width = `${size}px`;
+        container.style.height = `${size}px`;
         
-        const size = this.labyrinthContainer.clientWidth;
+        // Game state
+        let ballX = 30;
+        let ballY = 30;
+        let successCount = 0;
+        let startTime = Date.now();
+        let timerInterval;
+        let isTiltMode = true;
+        let isDragging = false;
+        let beta = 0, gamma = 0;
         
-        // Set center position
-        this.centerX = size - 70;
-        this.centerY = size - 70;
-        this.labyrinthCenter.style.left = `${this.centerX}px`;
-        this.labyrinthCenter.style.top = `${this.centerY}px`;
+        // Set goal position
+        const goalX = size - 80;
+        const goalY = size - 80;
+        goal.style.left = `${goalX}px`;
+        goal.style.top = `${goalY}px`;
         
-        // Reset ball
-        this.ballX = 30;
-        this.ballY = 30;
-        this.updateBallPosition();
+        // Update ball position
+        const updateBall = () => {
+            ball.style.transform = `translate(${ballX}px, ${ballY}px)`;
+        };
         
         // Generate walls
-        this.generateWalls(size);
-        this.drawWalls();
-    }
-    
-    generateWalls(size) {
-        // Boundary walls
-        const wallThickness = 15;
-        this.walls.push({ x: 0, y: 0, width: size, height: wallThickness });
-        this.walls.push({ x: 0, y: 0, width: wallThickness, height: size });
-        this.walls.push({ x: size - wallThickness, y: 0, width: wallThickness, height: size });
-        this.walls.push({ x: 0, y: size - wallThickness, width: size, height: wallThickness });
+        const walls = [];
+        const wallThickness = 12;
         
-        // Random interior walls
-        for (let i = 0; i < 6; i++) {
+        // Boundary walls
+        walls.push({ x: 0, y: 0, width: size, height: wallThickness });
+        walls.push({ x: 0, y: 0, width: wallThickness, height: size });
+        walls.push({ x: size - wallThickness, y: 0, width: wallThickness, height: size });
+        walls.push({ x: 0, y: size - wallThickness, width: size, height: wallThickness });
+        
+        // Random interior walls (simpler for mobile)
+        for (let i = 0; i < 4; i++) {
             const isHorizontal = Math.random() > 0.5;
             let x, y, width, height;
             
             if (isHorizontal) {
-                x = Math.random() * (size - 150) + 30;
-                y = Math.random() * (size - 150) + 30;
-                width = 60 + Math.random() * 100;
-                height = 12;
+                x = Math.random() * (size - 200) + 50;
+                y = Math.random() * (size - 200) + 50;
+                width = 80 + Math.random() * 120;
+                height = wallThickness;
             } else {
-                x = Math.random() * (size - 150) + 30;
-                y = Math.random() * (size - 150) + 30;
-                width = 12;
-                height = 60 + Math.random() * 100;
+                x = Math.random() * (size - 200) + 50;
+                y = Math.random() * (size - 200) + 50;
+                width = wallThickness;
+                height = 80 + Math.random() * 120;
             }
             
-            if (!this.blocksStartOrEnd(x, y, width, height)) {
-                this.walls.push({ x, y, width, height });
-            }
+            walls.push({ x, y, width, height });
         }
-    }
-    
-    blocksStartOrEnd(x, y, width, height) {
-        const startBlocked = this.rectOverlap(x, y, width, height, 20, 20, 50, 50);
-        const endBlocked = this.rectOverlap(x, y, width, height, this.centerX - 25, this.centerY - 25, 70, 70);
-        return startBlocked || endBlocked;
-    }
-    
-    rectOverlap(ax, ay, aw, ah, bx, by, bw, bh) {
-        return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
-    }
-    
-    drawWalls() {
-        this.walls.forEach(wall => {
+        
+        // Draw walls
+        walls.forEach(wall => {
             const wallElement = document.createElement('div');
-            wallElement.className = 'labyrinth-wall';
+            wallElement.className = 'wall';
             wallElement.style.left = `${wall.x}px`;
             wallElement.style.top = `${wall.y}px`;
             wallElement.style.width = `${wall.width}px`;
             wallElement.style.height = `${wall.height}px`;
-            this.labyrinthContainer.appendChild(wallElement);
+            container.appendChild(wallElement);
         });
-    }
-    
-    bindLabyrinthEvents() {
-        document.getElementById('tiltControl').addEventListener('click', () => this.setTiltMode(true));
-        document.getElementById('touchControl').addEventListener('click', () => this.setTiltMode(false));
-        document.getElementById('resetLabyrinth').addEventListener('click', () => this.resetBall());
         
-        // Device orientation
-        window.addEventListener('deviceorientation', (e) => {
-            if (this.isTiltMode) {
-                this.beta = e.beta || 0;
-                this.gamma = e.gamma || 0;
+        // Collision detection
+        const checkCollision = (x, y) => {
+            const ballSize = 36;
+            
+            for (const wall of walls) {
+                if (x < wall.x + wall.width &&
+                    x + ballSize > wall.x &&
+                    y < wall.y + wall.height &&
+                    y + ballSize > wall.y) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        
+        // Move ball
+        const moveBall = (dx, dy) => {
+            const newX = ballX + dx;
+            const newY = ballY + dy;
+            const ballSize = 36;
+            
+            // Boundary check
+            const maxX = size - wallThickness - ballSize;
+            const maxY = size - wallThickness - ballSize;
+            const minX = wallThickness;
+            const minY = wallThickness;
+            
+            let finalX = Math.max(minX, Math.min(maxX, newX));
+            let finalY = Math.max(minY, Math.min(maxY, newY));
+            
+            // Check wall collisions
+            if (!checkCollision(finalX, finalY)) {
+                ballX = finalX;
+                ballY = finalY;
+                updateBall();
+                
+                // Check goal collision
+                const goalSize = 50;
+                if (ballX < goalX + goalSize &&
+                    ballX + ballSize > goalX &&
+                    ballY < goalY + goalSize &&
+                    ballY + ballSize > goalY) {
+                    
+                    successCount++;
+                    successCountElement.textContent = successCount;
+                    
+                    // Feedback
+                    if (this.hapticEnabled && 'vibrate' in navigator) {
+                        navigator.vibrate([50, 30, 50, 30, 50]);
+                    }
+                    
+                    if (this.soundEnabled) {
+                        this.playSound(800, 0.3);
+                    }
+                    
+                    // Visual feedback
+                    ball.style.animation = 'pulseGlow 0.5s 3';
+                    setTimeout(() => {
+                        ball.style.animation = '';
+                        ballX = 30;
+                        ballY = 30;
+                        updateBall();
+                    }, 1500);
+                }
+            } else if (this.hapticEnabled && 'vibrate' in navigator) {
+                navigator.vibrate(10);
+            }
+        };
+        
+        // Start timer
+        const startTimer = () => {
+            if (timerInterval) clearInterval(timerInterval);
+            
+            timerInterval = setInterval(() => {
+                const time = Math.floor((Date.now() - startTime) / 1000);
+                timeSpentElement.textContent = `${time}s`;
+            }, 1000);
+        };
+        
+        startTimer();
+        updateBall();
+        
+        // Tilt control
+        if (typeof DeviceOrientationEvent !== 'undefined') {
+            window.addEventListener('deviceorientation', (e) => {
+                if (isTiltMode) {
+                    beta = (e.beta || 0) / 20;
+                    gamma = (e.gamma || 0) / 20;
+                }
+            });
+        }
+        
+        // Animation loop
+        const animate = () => {
+            if (isTiltMode) {
+                moveBall(gamma, beta);
+            }
+            requestAnimationFrame(animate);
+        };
+        animate();
+        
+        // Touch control
+        container.addEventListener('touchstart', (e) => {
+            if (!isTiltMode) {
+                e.preventDefault();
+                isDragging = true;
             }
         });
         
-        // Touch events
-        this.labyrinthContainer.addEventListener('touchstart', (e) => {
-            if (!this.isTiltMode) {
-                e.preventDefault();
-                this.isDragging = true;
-                const touch = e.touches[0];
-                const rect = this.labyrinthContainer.getBoundingClientRect();
-                this.touchStartX = touch.clientX - rect.left;
-                this.touchStartY = touch.clientY - rect.top;
-            }
-        });
-        
-        this.labyrinthContainer.addEventListener('touchmove', (e) => {
-            if (!this.isTiltMode && this.isDragging) {
+        container.addEventListener('touchmove', (e) => {
+            if (!isTiltMode && isDragging) {
                 e.preventDefault();
                 const touch = e.touches[0];
-                const rect = this.labyrinthContainer.getBoundingClientRect();
+                const rect = container.getBoundingClientRect();
                 const touchX = touch.clientX - rect.left;
                 const touchY = touch.clientY - rect.top;
                 
-                const deltaX = touchX - this.touchStartX;
-                const deltaY = touchY - this.touchStartY;
+                const dx = (touchX - ballX - 18) * 0.15;
+                const dy = (touchY - ballY - 18) * 0.15;
                 
-                this.touchStartX = touchX;
-                this.touchStartY = touchY;
-                
-                this.moveBall(deltaX * 0.5, deltaY * 0.5);
+                moveBall(dx, dy);
             }
         });
         
-        this.labyrinthContainer.addEventListener('touchend', () => {
-            this.isDragging = false;
+        container.addEventListener('touchend', () => {
+            isDragging = false;
         });
-    }
-    
-    requestDeviceOrientation() {
-        if (typeof DeviceOrientationEvent !== 'undefined' && 
-            typeof DeviceOrientationEvent.requestPermission === 'function') {
-            DeviceOrientationEvent.requestPermission()
-                .then(permissionState => {
-                    if (permissionState === 'granted') {
-                        console.log('Gyroscope permission granted');
-                    }
-                })
-                .catch(console.error);
-        }
-    }
-    
-    animationLoop() {
-        const update = () => {
-            if (this.isTiltMode && this.currentExercise === 'labyrinth') {
-                this.moveBall(this.gamma / 15, this.beta / 15);
+        
+        // Mouse control for desktop
+        container.addEventListener('mousedown', (e) => {
+            if (!isTiltMode) {
+                isDragging = true;
             }
-            requestAnimationFrame(update);
-        };
-        update();
-    }
-    
-    moveBall(deltaX, deltaY) {
-        const newX = this.ballX + deltaX;
-        const newY = this.ballY + deltaY;
+        });
         
-        const containerRect = this.labyrinthContainer.getBoundingClientRect();
-        const ballSize = 30;
-        const minX = 0;
-        const minY = 0;
-        const maxX = containerRect.width - ballSize;
-        const maxY = containerRect.height - ballSize;
-        
-        let finalX = Math.max(minX, Math.min(maxX, newX));
-        let finalY = Math.max(minY, Math.min(maxY, newY));
-        
-        // Check wall collisions
-        if (!this.checkWallCollision(finalX, finalY, ballSize)) {
-            this.ballX = finalX;
-            this.ballY = finalY;
-            this.updateBallPosition();
-            this.checkCenterCollision();
-        } else if (this.hapticEnabled && 'vibrate' in navigator) {
-            navigator.vibrate(10);
-        }
-    }
-    
-    checkWallCollision(x, y, size) {
-        for (const wall of this.walls) {
-            if (this.rectOverlap(x, y, size, size, wall.x, wall.y, wall.width, wall.height)) {
-                return true;
+        container.addEventListener('mousemove', (e) => {
+            if (!isTiltMode && isDragging) {
+                const rect = container.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                
+                const dx = (mouseX - ballX - 18) * 0.1;
+                const dy = (mouseY - ballY - 18) * 0.1;
+                
+                moveBall(dx, dy);
             }
-        }
-        return false;
-    }
-    
-    checkCenterCollision() {
-        const ballRect = this.labyrinthBall.getBoundingClientRect();
-        const centerRect = this.labyrinthCenter.getBoundingClientRect();
+        });
         
-        if (this.rectOverlap(
-            ballRect.left, ballRect.top, ballRect.width, ballRect.height,
-            centerRect.left, centerRect.top, centerRect.width, centerRect.height
-        )) {
-            this.onCenterReached();
-        }
-    }
-    
-    onCenterReached() {
-        this.successCount++;
-        document.getElementById('successCount').textContent = this.successCount;
+        container.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
         
-        if (this.hapticEnabled && 'vibrate' in navigator) {
-            navigator.vibrate([50, 30, 50, 30, 50]);
-        }
+        // Control buttons
+        document.getElementById('tiltMode').addEventListener('click', () => {
+            isTiltMode = true;
+            document.getElementById('tiltMode').classList.add('active');
+            document.getElementById('touchMode').classList.remove('active');
+            
+            if (this.soundEnabled) {
+                this.playSound(500, 0.1);
+            }
+        });
         
-        this.labyrinthBall.style.animation = 'pulse 0.5s 3';
-        setTimeout(() => {
-            this.labyrinthBall.style.animation = '';
-            this.resetBall();
-        }, 1500);
-    }
-    
-    updateBallPosition() {
-        this.labyrinthBall.style.transform = `translate(${this.ballX}px, ${this.ballY}px)`;
-    }
-    
-    resetBall() {
-        this.ballX = 30;
-        this.ballY = 30;
-        this.updateBallPosition();
+        document.getElementById('touchMode').addEventListener('click', () => {
+            isTiltMode = false;
+            document.getElementById('touchMode').classList.add('active');
+            document.getElementById('tiltMode').classList.remove('active');
+            
+            if (this.soundEnabled) {
+                this.playSound(500, 0.1);
+            }
+        });
         
-        if (this.hapticEnabled && 'vibrate' in navigator) {
-            navigator.vibrate(30);
-        }
-    }
-    
-    setTiltMode(enabled) {
-        this.isTiltMode = enabled;
-        document.getElementById('tiltControl').classList.toggle('active', enabled);
-        document.getElementById('touchControl').classList.toggle('active', !enabled);
-        
-        if (enabled) {
-            this.requestDeviceOrientation();
-        }
-    }
-    
-    startTimer() {
-        this.startTime = Date.now();
-        
-        if (this.timerInterval) {
-            clearInterval(this.timerInterval);
-        }
-        
-        this.timerInterval = setInterval(() => {
-            this.timeSpent = Math.floor((Date.now() - this.startTime) / 1000);
-            document.getElementById('timeSpent').textContent = `${this.timeSpent}s`;
-        }, 1000);
+        document.getElementById('resetLabyrinth').addEventListener('click', () => {
+            ballX = 30;
+            ballY = 30;
+            updateBall();
+            
+            if (this.hapticEnabled && 'vibrate' in navigator) {
+                navigator.vibrate(30);
+            }
+        });
     }
 }
 
-// Initialize app when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize app
+window.addEventListener('DOMContentLoaded', () => {
     window.stressBallApp = new StressBallApp();
 });

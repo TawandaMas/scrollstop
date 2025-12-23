@@ -1,10 +1,38 @@
 {
   "name": "StressBall PWA",
   "short_name": "StressBall",
-  "description": "Digital stress relief with fidget exercises",
-  "start_url": "./index.html",
+  "description": "Digital stress relief with bubble wrap, kaleidoscope, and labyrinth exercises",
+  "start_url": "./",
   "display": "standalone",
-  "background_color": "#f8f9fa",
-  "theme_color": "#4a6fa5",
-  "icons": []
+  "background_color": "#f8faff",
+  "theme_color": "#5d6df5",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["entertainment", "health", "lifestyle"],
+  "shortcuts": [
+    {
+      "name": "Bubble Wrap",
+      "short_name": "Bubbles",
+      "description": "Pop virtual bubble wrap",
+      "url": "./#bubble-wrap"
+    },
+    {
+      "name": "Kaleidoscope",
+      "short_name": "Draw",
+      "description": "Create symmetric patterns",
+      "url": "./#kaleidoscope"
+    },
+    {
+      "name": "Focus Labyrinth",
+      "short_name": "Labyrinth",
+      "description": "Guide a ball through maze",
+      "url": "./#labyrinth"
+    }
+  ]
 }

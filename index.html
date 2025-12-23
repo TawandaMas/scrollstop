@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#4a6fa5">
+    <meta name="description" content="StressBall PWA - Digital stress relief exercises">
+    <title>StressBall PWA</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="icons/icon-72x72.png">
+    <link rel="apple-touch-icon" href="icons/icon-152x152.png">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <h1 class="logo">🎮 StressBall</h1>
+            <div class="controls">
+                <button id="soundToggle" class="control-btn" aria-label="Toggle sound">🔊</button>
+                <button id="hapticToggle" class="control-btn" aria-label="Toggle haptic feedback">📳</button>
+                <button id="themeToggle" class="control-btn" aria-label="Toggle theme">🌙</button>
+            </div>
+        </header>
+
+        <!-- Exercise Selector -->
+        <nav class="exercise-nav" id="exerciseNav">
+            <button class="nav-btn active" data-exercise="bubble-wrap">
+                <span class="nav-icon">🫧</span>
+                <span class="nav-label">Bubble Wrap</span>
+            </button>
+            <button class="nav-btn" data-exercise="kaleidoscope">
+                <span class="nav-icon">🌀</span>
+                <span class="nav-label">Kaleidoscope</span>
+            </button>
+            <button class="nav-btn" data-exercise="labyrinth">
+                <span class="nav-icon">🧭</span>
+                <span class="nav-label">Focus Labyrinth</span>
+            </button>
+        </nav>
+
+        <!-- Exercise Containers -->
+        <main class="exercise-container">
+            <!-- Bubble Wrap Exercise -->
+            <div id="bubble-wrap-exercise" class="exercise active">
+                <div class="exercise-header">
+                    <h2>Infinite Bubble Wrap</h2>
+                    <p>Tap to pop! Each bubble gives haptic feedback</p>
+                </div>
+                <div class="bubble-container" id="bubbleContainer">
+                    <!-- Bubbles will be generated here -->
+                </div>
+                <div class="stats">
+                    <div class="stat">
+                        <span class="stat-value" id="poppedCount">0</span>
+                        <span class="stat-label">Popped</span>
+                    </div>
+                    <button id="resetBubbles" class="action-btn">🔁 Reset Bubbles</button>
+                </div>
+            </div>
+
+            <!-- Kaleidoscope Exercise -->
+            <div id="kaleidoscope-exercise" class="exercise">
+                <div class="exercise-header">
+                    <h2>Kaleidoscope Drawing</h2>
+                    <p>Draw with one finger to create symmetric patterns</p>
+                </div>
+                <div class="kaleidoscope-controls">
+                    <button id="clearCanvas" class="action-btn">🗑️ Clear</button>
+                    <button id="changeColor" class="action-btn">🎨 New Color</button>
+                    <button id="changeSegments" class="action-btn">🔢 Segments: <span id="segmentCount">6</span></button>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="kaleidoscopeCanvas"></canvas>
+                </div>
+                <div class="color-indicator">
+                    Current Color: <span id="currentColor" class="color-dot"></span>
+                </div>
+            </div>
+
+            <!-- Labyrinth Exercise -->
+            <div id="labyrinth-exercise" class="exercise">
+                <div class="exercise-header">
+                    <h2>Focus Labyrinth</h2>
+                    <p>Tilt your device or use touch to guide the ball to the center</p>
+                </div>
+                <div class="labyrinth-controls">
+                    <button id="resetLabyrinth" class="action-btn">🔄 Reset Ball</button>
+                    <div class="control-mode">
+                        <button id="tiltControl" class="control-mode-btn active">📱 Tilt</button>
+                        <button id="touchControl" class="control-mode-btn">👆 Touch</button>
+                    </div>
+                </div>
+                <div class="labyrinth-container">
+                    <div class="labyrinth" id="labyrinth">
+                        <!-- Labyrinth will be drawn here -->
+                    </div>
+                    <div class="labyrinth-ball" id="labyrinthBall"></div>
+                    <div class="labyrinth-center" id="labyrinthCenter"></div>
+                </div>
+                <div class="labyrinth-stats">
+                    <div class="stat">
+                        <span class="stat-value" id="timeSpent">0s</span>
+                        <span class="stat-label">Time</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="successCount">0</span>
+                        <span class="stat-label">Completed</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- PWA Install Prompt -->
+        <div id="installPrompt" class="install-prompt">
+            <p>Install StressBall for quick access!</p>
+            <button id="installBtn" class="install-btn">📲 Install</button>
+            <button id="dismissInstall" class="dismiss-btn">✕</button>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>PWA Stress Relief • Works Offline • No Tracking</p>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="app.js" type="module"></script>
+</body>
+</html>
